@@ -10,6 +10,8 @@ from logger import Logger
 import atari_py
 import numpy as np
 import torch
+import torch_xla
+
 from tqdm import trange
 
 from agent import Agent

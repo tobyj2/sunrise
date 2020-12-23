@@ -10,7 +10,7 @@ from logger import Logger
 import atari_py
 import numpy as np
 import torch
-import torch_xla
+
 
 from tqdm import trange
 
@@ -58,6 +58,8 @@ parser.add_argument('--enable-cudnn', action='store_true', help='Enable cuDNN (f
 parser.add_argument('--checkpoint-interval', default=0, help='How often to checkpoint the model, defaults to 0 (never checkpoint)')
 parser.add_argument('--memory', help='Path to save/load the memory from')
 parser.add_argument('--disable-bzip-memory', action='store_true', help='Don\'t zip the memory file. Not recommended (zipping is a bit slower and much, much smaller)')
+parser.add_argument('--use-TPU', action='store_true')
+
 
 # Setup
 args = parser.parse_args()
@@ -73,7 +75,13 @@ if not os.path.exists(results_dir):
 metrics = {'steps': [], 'rewards': [], 'Qs': [], 'best_avg_reward': -float('inf')}
 np.random.seed(args.seed)
 torch.manual_seed(np.random.randint(1, 10000))
-if torch.cuda.is_available() and not args.disable_cuda:
+
+if args.use_TPU:
+    import torch_xla
+    import torch_xla.core.xla_model as xm
+    args.device = xm.xla_device()
+
+elif torch.cuda.is_available() and not args.disable_cuda:
     args.device = torch.device('cuda')
     torch.cuda.manual_seed(np.random.randint(1, 10000))
     torch.backends.cudnn.enabled = args.enable_cudnn
